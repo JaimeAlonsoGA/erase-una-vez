@@ -8,16 +8,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
+
 import background from "../assets/media/background.png";
 import Swiper from "react-native-deck-swiper";
-import { LinearGradient } from "expo-linear-gradient";
-// import cardTexture from "../assets/media/cardTexture.png";
+import { getCardsName, getCards } from "../src/db/cards";
+import { setPersonalDeck } from "../src/components/setCards";
+
 import florIcon from "../assets/media/florIcon.png";
 
 const { width, height } = Dimensions.get("screen");
 
 const Main = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -25,7 +30,10 @@ const Main = () => {
         resizeMode="cover"
         style={styles.background}
       >
-        <TouchableOpacity style={styles.settingsContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Rules")}
+          style={styles.settingsContainer}
+        >
           <Image source={florIcon} style={styles.settingsIcon} />
         </TouchableOpacity>
         <View style={styles.swiperContainer}>
@@ -37,42 +45,47 @@ const Main = () => {
 };
 
 const SwiperComponent = () => {
+  const [cards, setCards] = useState([setPersonalDeck()]);
+  const [key, setKey] = useState(0);
+
+  useEffect(() => {
+    getCardsName()
+      .then((names) => {
+        setCards(names);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, []);
+
+  const onSwiped = (index) => {
+    setCards((prevCards) => {
+      const newCards = [...prevCards];
+      const swipedCard = newCards.splice(index, 1);
+      newCards.push(swipedCard[0]);
+      return newCards;
+    });
+    setKey((prevKey) => prevKey + 1); // increment key to force re-render
+  };
+
   return (
     <Swiper
-      cards={[
-        "MAGO",
-        "CHOZA",
-        "VIENTO",
-        "RANA",
-        "RON",
-        "FIESTA",
-        "ESTRELLA FUGAZ",
-        "HOJAS",
-      ]}
+      key={key}
+      cards={cards}
       renderCard={(card) => {
         return (
           <View style={styles.card}>
             <LinearGradient
-              colors={['#AEC6CF', '#B39EB5', '#FFB1B9']}
+              colors={["#AEC6CF", "#B39EB5", "#FFB1B9"]}
               style={styles.linearGradient}
             >
-              {/* <ImageBackground
-              source={cardTexture}
-              resizeMode="contain"
-              style={styles.cardTexture}
-            > */}
               <Text style={styles.text}>{card}</Text>
             </LinearGradient>
           </View>
         );
       }}
-      onSwiped={(cardIndex) => {
-        console.log(cardIndex);
-      }}
-      onSwipedAll={() => {
-        console.log("onSwipedAll");
-      }}
-      cardIndex={0}
+      onSwiped={onSwiped}
+      onSwipedBottom={() => console.log("card swiped bot")}
       // backgroundColor={"white"}
       stackSize={3}
       backgroundColor="transparent"
@@ -108,7 +121,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    borderRadius: 2,
+    borderRadius: 4,
     borderWidth: 2,
     borderColor: "#FAE193",
     justifyContent: "center",
@@ -134,6 +147,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingLeft: 15,
     paddingRight: 15,
-    borderRadius: 2,
+    borderRadius: 4,
   },
 });
