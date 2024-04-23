@@ -39,8 +39,14 @@ const Rules = () => {
           </Text>
         </View>
         <View style={styles.rulesContainer}>
-          <Text style={styles.rules}>{RULES_TEXT}</Text>
+          <Text style={styles.rules}>Aquí van las reglas del juego</Text>
         </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Extra")}
+          style={styles.extraContainer}
+        >
+          <Image source={florIcon} style={styles.extraIcon} />
+        </TouchableOpacity>
       </ImageBackground>
     </View>
   );
@@ -72,7 +78,7 @@ const styles = StyleSheet.create({
     marginLeft: 140,
     marginTop: 60,
     letterSpacing: 1.5,
-    },
+  },
   rulesContainer: {
     width: width,
     height: height,
@@ -87,4 +93,14 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     width: 100,
   },
+  extraContainer: {
+    position: "absolute",
+    marginLeft: width / 1.5,
+    marginTop: height / 1.2,
+    zIndex: 1,
+  },
+  extraIcon: {
+    resizeMode: "contain",
+    width: 100,
+  }
 });

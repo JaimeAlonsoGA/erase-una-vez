@@ -22,7 +22,7 @@ export const addCard = (name) => {
     tx.executeSql(
       "INSERT INTO Cards (name) values (?);",
       [name],
-      (_, result) => console.log("Card inserted successfully"),
+      (_, result) => console.log("Card", name, "inserted successfully"),
       (_, error) => {
         console.error(error);
         return true;

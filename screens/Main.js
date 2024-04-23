@@ -11,6 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import { useFonts, PoorStory_400Regular } from "@expo-google-fonts/poor-story";
 
 import background from "../assets/media/background.png";
 import Swiper from "react-native-deck-swiper";
@@ -18,11 +19,14 @@ import { getCardsName, getCards } from "../src/db/cards";
 import { setPersonalDeck } from "../src/components/setCards";
 
 import florIcon from "../assets/media/florIcon.png";
+import Bubble from "../src/components/bubble";
 
 const { width, height } = Dimensions.get("screen");
 
 const Main = () => {
   const navigation = useNavigation();
+  // useFonts({ PoorStory_400Regular });
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -38,6 +42,7 @@ const Main = () => {
         </TouchableOpacity>
         <View style={styles.swiperContainer}>
           <SwiperComponent />
+          <Bubble />
         </View>
       </ImageBackground>
     </View>
@@ -45,18 +50,18 @@ const Main = () => {
 };
 
 const SwiperComponent = () => {
-  const [cards, setCards] = useState([setPersonalDeck()]);
+  const [cards, setCards] = useState(setPersonalDeck());
   const [key, setKey] = useState(0);
 
-  useEffect(() => {
-    getCardsName()
-      .then((names) => {
-        setCards(names);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }, []);
+  // useEffect(() => {
+  //   getCardsName()
+  //     .then((names) => {
+  //       setCards(names);
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //     });
+  // }, []);
 
   const onSwiped = (index) => {
     setCards((prevCards) => {
@@ -68,6 +73,18 @@ const SwiperComponent = () => {
     setKey((prevKey) => prevKey + 1); // increment key to force re-render
   };
 
+  //SOLUCIONAR EL DESCARTAR CARTAS ONSWIPEBOTTOM
+  const onDiscard = () => {
+    setTimeout(() => {
+      setCards((prevCards) => {
+        const newCards = [...prevCards];
+        newCards.splice(0, 1);
+        return newCards;
+      });
+      setKey((prevKey) => prevKey + 1); // increment key to force re-render
+    }, 0);
+  };
+
   return (
     <Swiper
       key={key}
@@ -76,7 +93,7 @@ const SwiperComponent = () => {
         return (
           <View style={styles.card}>
             <LinearGradient
-              colors={["#AEC6CF", "#B39EB5", "#FFB1B9"]}
+              colors={["#ADD8E6", "#1E90FF"]}
               style={styles.linearGradient}
             >
               <Text style={styles.text}>{card}</Text>
@@ -85,7 +102,7 @@ const SwiperComponent = () => {
         );
       }}
       onSwiped={onSwiped}
-      onSwipedBottom={() => console.log("card swiped bot")}
+      onSwipedBottom={onDiscard}
       // backgroundColor={"white"}
       stackSize={3}
       backgroundColor="transparent"
@@ -121,8 +138,8 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    borderRadius: 4,
-    borderWidth: 2,
+    borderRadius: 1,
+    borderWidth: 1,
     borderColor: "#FAE193",
     justifyContent: "center",
     backgroundColor: "#90D2E8",
@@ -141,6 +158,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 30,
     backgroundColor: "transparent",
+    // fontFamily: "PoorStory_400Regular",
+    letterSpacing: 1.5
   },
   linearGradient: {
     flex: 1,

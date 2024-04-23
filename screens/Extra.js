@@ -1,0 +1,160 @@
+import {
+  Button,
+  Dimensions,
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { cards, setTotalDeckCard } from "../src/components/setCards";
+
+import background from "../assets/media/background.png";
+import florIcon from "../assets/media/florIcon.png";
+import { addCard } from "../src/db/cards";
+
+const { width, height } = Dimensions.get("screen");
+
+const Extra = () => {
+  const [cardList, setCards] = useState(cards);
+  const [text, setText] = useState("");
+  const navigation = useNavigation();
+
+  return (
+    <View style={styles.container}>
+      <ImageBackground
+        source={background}
+        resizeMode="cover"
+        style={styles.background}
+      >
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Rules")}
+          style={styles.settingsContainer}
+        >
+          <Image source={florIcon} style={styles.settingsIcon} />
+        </TouchableOpacity>
+        <CardDeck cards={cardList} setText={setText} />
+        <ModifyDeck
+          cards={cardList}
+          setCards={setCards}
+          text={text}
+          setText={setText}
+        />
+      </ImageBackground>
+    </View>
+  );
+};
+
+const CardDeck = ({ cards, setText }) => {
+  return (
+    <View style={styles.cardsContainer}>
+      <Text style={styles.card}>Todas las cartas de la baraja</Text>
+      <ScrollView
+        style={styles.cardsScrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <Cards cards={cards} setText={setText} />
+      </ScrollView>
+    </View>
+  );
+};
+
+const Cards = ({ cards, setText }) =>
+  cards.map((card, key) => (
+    <View key={key}>
+      <TouchableOpacity onPress={() => setText(card)}>
+        <Text style={styles.card}>{card}</Text>
+      </TouchableOpacity>
+    </View>
+  ));
+
+const ModifyDeck = ({ cards, setCards, text, setText }) => {
+  const handleSubmit = () => {
+    setCards((prevCards) => [...prevCards, text]);
+    cards.push(text);
+    setTotalDeckCard();
+    setText("");
+  };
+
+  return (
+    <View style={styles.form}>
+      <Text style={styles.card}>Añade tus propias cartas</Text>
+      <TextInput style={styles.input} onChangeText={setText} value={text} />
+      <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>Añadir</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default Extra;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: width,
+    height: height,
+  },
+  background: {
+    flex: 1,
+    width: width,
+    height: height,
+  },
+  settingsContainer: {
+    position: "absolute",
+    padding: 20,
+    zIndex: 1,
+  },
+  settingsIcon: {
+    resizeMode: "contain",
+    width: 100,
+  },
+  cardsContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: height / 4,
+  },
+  cardsScrollView: {
+    borderColor: "black",
+    borderBottomWidth: 1,
+    borderTopWidth: 1,
+    width: 150,
+    height: 200,
+  },
+  card: {
+    color: "white",
+    padding: 10,
+    textAlign: "center",
+    letterSpacing: 1.5,
+  },
+  form: {
+    marginTop: 50,
+  },
+  form: {
+    alignItems: "center",
+  },
+  input: {
+    textAlign: "center",
+    height: 40,
+    width: width / 2,
+    borderColor: "gray",
+    borderWidth: 1,
+  },
+  addButton: {
+    padding: 20,
+    marginTop: 10,
+    backgroundColor: "rgba(150, 221, 234, 1)",
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: "grey",
+    textAlign: "center",
+    letterSpacing: 1.5,
+    fontSize: 12,
+  },
+});
