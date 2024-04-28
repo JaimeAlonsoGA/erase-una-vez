@@ -8,11 +8,14 @@ import {
   View,
 } from "react-native";
 import React from "react";
+
+import { useNavigation } from "@react-navigation/native";
+import { RULES_TEXT } from "../src/components/rules";
+
 import background from "../assets/media/background.png";
 import ruleContainer from "../assets/media/ruleContainer.png";
 import florIcon from "../assets/media/florIcon.png";
-import { useNavigation } from "@react-navigation/native";
-import { RULES_TEXT } from "../src/components/rules";
+import florIconExtra from "../assets/media/florIconExtra.png";
 
 const { width, height } = Dimensions.get("screen");
 
@@ -39,13 +42,13 @@ const Rules = () => {
           </Text>
         </View>
         <View style={styles.rulesContainer}>
-          <Text style={styles.rules}>Aquí van las reglas del juego</Text>
+          <Text style={styles.rules}>{RULES_TEXT}</Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate("Extra")}
           style={styles.extraContainer}
         >
-          <Image source={florIcon} style={styles.extraIcon} />
+          <Image source={florIconExtra} style={styles.extraIcon} />
         </TouchableOpacity>
       </ImageBackground>
     </View>
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     padding: 4,
     margin: 15,
-    marginTop: 120,
+    // marginTop: 50,
     letterSpacing: 1.5,
   },
   alertText: {
@@ -96,11 +99,11 @@ const styles = StyleSheet.create({
   extraContainer: {
     position: "absolute",
     marginLeft: width / 1.5,
-    marginTop: height / 1.2,
+    marginTop: height / 8,
     zIndex: 1,
   },
   extraIcon: {
     resizeMode: "contain",
     width: 100,
-  }
+  },
 });

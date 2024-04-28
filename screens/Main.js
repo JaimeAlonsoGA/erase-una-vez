@@ -1,4 +1,5 @@
 import {
+  Animated,
   Button,
   Dimensions,
   Image,
@@ -8,24 +9,89 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import { useFonts, PoorStory_400Regular } from "@expo-google-fonts/poor-story";
 
 import background from "../assets/media/background.png";
 import Swiper from "react-native-deck-swiper";
-import { getCardsName, getCards } from "../src/db/cards";
-import { setPersonalDeck } from "../src/components/setCards";
+import { AppContext } from "../src/db/context";
 
 import florIcon from "../assets/media/florIcon.png";
 import Bubble from "../src/components/bubble";
+import { addCardToUserDeck, getRandomCard } from "../src/db/cards";
 
 const { width, height } = Dimensions.get("screen");
 
+const useIsVisible = (initialState = true) => {
+  const { userCards, setUserCards, userId } = useContext(AppContext);
+  const [isVisible, setIsVisible] = useState(initialState);
+  const [textVisible, setTextVisible] = useState(false);
+
+  const toggleIsVisible = () => {
+    const randomTimer = Math.random() * (60000 - 10000) + 10000;
+    // const randomCardIndex = Math.floor(Math.random() * cards.length);
+
+    setTextVisible((currentTextVisible) => !currentTextVisible);
+    setTimeout(() => {
+      setTextVisible((currentTextVisible) => !currentTextVisible);
+    }, 5000);
+
+    setIsVisible((currentIsVisible) => !currentIsVisible);
+    setTimeout(() => {
+      setIsVisible((currentIsVisible) => !currentIsVisible);
+    }, randomTimer);
+
+    const addCard = async () => {
+      const newCard = await getRandomCard();
+      console.log(newCard);
+      await addCardToUserDeck(userId, newCard);
+      await setUserCards((prevCards) => [...prevCards, newCard]);
+    };
+
+    addCard();
+  };
+  return [isVisible, textVisible, toggleIsVisible];
+};
+
 const Main = () => {
   const navigation = useNavigation();
+  const [isVisible, textVisible, toggleIsVisible] = useIsVisible();
   // useFonts({ PoorStory_400Regular });
+  const position = useRef(new Animated.ValueXY()).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  // useEffect(() => {
+  //   const animate = () => {
+  //     Animated.parallel([
+  //       Animated.timing(position, {
+  //         toValue: { x: 0, y: -200 },
+  //         duration: 5000,
+  //         useNativeDriver: false,
+  //       }),
+  //       Animated.sequence([
+  //         Animated.timing(opacity, {
+  //           toValue: 1,
+  //           duration: 2000,
+  //           useNativeDriver: false,
+  //         }),
+  //         Animated.timing(opacity, {
+  //           toValue: 0,
+  //           duration: 2000,
+  //           useNativeDriver: false,
+  //         }),
+  //         Animated.timing(position, {
+  //           toValue: { x: 0, y: 0 },
+  //           duration: 5000,
+  //           useNativeDriver: false,
+  //         }),
+  //       ]),
+  //     ]).start(() => {
+  //       animate();
+  //     });
+  //   };
+  //   animate();
+  // }, []);
 
   return (
     <View style={styles.container}>
@@ -42,53 +108,65 @@ const Main = () => {
         </TouchableOpacity>
         <View style={styles.swiperContainer}>
           <SwiperComponent />
-          <Bubble />
+          {isVisible && (
+            <Bubble style={styles.bubble} toggleIsVisible={toggleIsVisible} />
+          )}
         </View>
+        {textVisible && (
+          <Animated.Text
+            style={[
+              styles.textVisible,
+              {
+                transform: position.getTranslateTransform(),
+                opacity,
+              },
+            ]}
+          >
+            +1 ¡carta añadida a tu baraja!
+          </Animated.Text>
+        )}
       </ImageBackground>
     </View>
   );
 };
 
 const SwiperComponent = () => {
-  const [cards, setCards] = useState(setPersonalDeck());
+  const { userCards, setUserCards } = useContext(AppContext);
   const [key, setKey] = useState(0);
+  const [cardsLength, setCardsLength] = useState(userCards.length);
 
-  // useEffect(() => {
-  //   getCardsName()
-  //     .then((names) => {
-  //       setCards(names);
-  //     })
-  //     .catch((error) => {
-  //       console.error(error);
-  //     });
-  // }, []);
+  const userCardArray = () => {
+    return userCards.map((card) => card.name);
+  };
+
+  useEffect(() => {
+    setCardsLength(userCards.length);
+  }, [userCards]);
+
+  const onDiscard = (index) => {
+    setUserCards((prevCards) => {
+      const newCards = [...prevCards];
+      newCards.splice(index, 1); // remove the swiped card
+      return newCards;
+    });
+    setKey((prevKey) => prevKey + 1); // Force a re-render of the Swiper component
+  };
 
   const onSwiped = (index) => {
-    setCards((prevCards) => {
+    setUserCards((prevCards) => {
       const newCards = [...prevCards];
       const swipedCard = newCards.splice(index, 1);
       newCards.push(swipedCard[0]);
       return newCards;
     });
-    setKey((prevKey) => prevKey + 1); // increment key to force re-render
-  };
-
-  //SOLUCIONAR EL DESCARTAR CARTAS ONSWIPEBOTTOM
-  const onDiscard = () => {
-    setTimeout(() => {
-      setCards((prevCards) => {
-        const newCards = [...prevCards];
-        newCards.splice(0, 1);
-        return newCards;
-      });
-      setKey((prevKey) => prevKey + 1); // increment key to force re-render
-    }, 0);
+    setKey((prevKey) => prevKey + 1);
+    console.log(userCardArray());
   };
 
   return (
     <Swiper
       key={key}
-      cards={cards}
+      cards={userCardArray()}
       renderCard={(card) => {
         return (
           <View style={styles.card}>
@@ -102,9 +180,8 @@ const SwiperComponent = () => {
         );
       }}
       onSwiped={onSwiped}
-      onSwipedBottom={onDiscard}
-      // backgroundColor={"white"}
-      stackSize={3}
+      // onSwipedBottom={onDiscard}
+      stackSize={10}
       backgroundColor="transparent"
       cardVerticalMargin={160}
       cardHorizontalMargin={60}
@@ -131,7 +208,7 @@ const styles = StyleSheet.create({
   settingsContainer: {
     position: "absolute",
     padding: 20,
-    zIndex: 1,
+    zIndex: 2,
   },
   swiperContainer: {
     alignItems: "center",
@@ -144,22 +221,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#90D2E8",
   },
-  // cardTexture: {
-  //   // width: 236,
-  //   // height: 440,
-  //   width: width / 1.52,
-  //   height: height,
-  //   // marginVertical: 160,
-  //   // marginHorizontal: 60,
-  //   // marginRight: 400,
-  //   justifyContent: "center",
-  // },
   text: {
     textAlign: "center",
     fontSize: 30,
     backgroundColor: "transparent",
     // fontFamily: "PoorStory_400Regular",
-    letterSpacing: 1.5
+    letterSpacing: 1.5,
   },
   linearGradient: {
     flex: 1,
@@ -167,5 +234,17 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     paddingRight: 15,
     borderRadius: 4,
+  },
+  textVisible: {
+    color: "white",
+    textAlign: "center",
+    letterSpacing: 1.5,
+    padding: 10,
+    position: "absolute",
+    bottom: 100,
+    fontSize: 20,
+  },
+  bubble: {
+    zIndex: 1,
   },
 });

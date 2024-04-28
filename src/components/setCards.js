@@ -1,5 +1,3 @@
-import { addCard } from "../db/cards";
-
 export const cards = [
   "Pájaro",
   "Luna",
@@ -301,36 +299,3 @@ export const cards = [
   "Elocuente",
   "Seducción",
 ];
-
-export const setTotalDeckCard = () => {
-  cards.map((card) => {
-    addCard(card);
-  });
-};
-
-const shuffleArray = (array) => {
-  //The Fisher-Yates shuffle algorithm works by iterating over the array
-  //from the last element to the first, and for each element,
-  //swapping it with an element at a random index that is less than or equal to the current index.
-  //This ensures that every permutation of the array is equally likely.
-  let currentIndex = array.length,
-    temporaryValue,
-    randomIndex;
-
-  while (0 !== currentIndex) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-};
-
-export const setPersonalDeck = () => {
-  const shuffledArray = shuffleArray([...cards]);
-  const selectedItems = shuffledArray.slice(0, 10);
-  return selectedItems;
-};

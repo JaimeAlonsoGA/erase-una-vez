@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Button,
   Dimensions,
   Image,
@@ -12,18 +13,39 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
-import { cards, setTotalDeckCard } from "../src/components/setCards";
 
 import background from "../assets/media/background.png";
 import florIcon from "../assets/media/florIcon.png";
-import { addCard } from "../src/db/cards";
+import { addCard, getCardsName } from "../src/db/cards";
+import EditCard from "../src/components/editCard";
 
 const { width, height } = Dimensions.get("screen");
 
 const Extra = () => {
-  const [cardList, setCards] = useState(cards);
+  const [cards, setCards] = useState([]);
   const [text, setText] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedCard, setSelectedCard] = useState({});
+  const [cardsUpdated, setCardsUpdated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const getCardsDeck = async () => {
+      setIsLoading(true);
+      const cardsFromDB = await getCardsName();
+      setCards(cardsFromDB);
+      setIsLoading(false);
+    };
+
+    getCardsDeck();
+    console.log("Cartas actualizadas!");
+  }, [cardsUpdated]);
+
+  useEffect(() => {
+    console.log(selectedCard);
+  }, [selectedCard]);
 
   return (
     <View style={styles.container}>
@@ -38,19 +60,40 @@ const Extra = () => {
         >
           <Image source={florIcon} style={styles.settingsIcon} />
         </TouchableOpacity>
-        <CardDeck cards={cardList} setText={setText} />
+        <CardDeck
+          cards={cards}
+          setText={setText}
+          setIsEditing={setIsEditing}
+          setSelectedCard={setSelectedCard}
+          isLoading={isLoading}
+        />
         <ModifyDeck
-          cards={cardList}
+          cards={cards}
           setCards={setCards}
           text={text}
           setText={setText}
         />
+        {isEditing && (
+          <EditCard
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            cardsUpdated={cardsUpdated}
+            setCardsUpdated={setCardsUpdated}
+            card={selectedCard}
+          />
+        )}
       </ImageBackground>
     </View>
   );
 };
 
-const CardDeck = ({ cards, setText }) => {
+const CardDeck = ({
+  cards,
+  setText,
+  setIsEditing,
+  setSelectedCard,
+  isLoading,
+}) => {
   return (
     <View style={styles.cardsContainer}>
       <Text style={styles.card}>Todas las cartas de la baraja</Text>
@@ -58,16 +101,29 @@ const CardDeck = ({ cards, setText }) => {
         style={styles.cardsScrollView}
         showsVerticalScrollIndicator={false}
       >
-        <Cards cards={cards} setText={setText} />
+        <Cards
+          cards={cards}
+          setText={setText}
+          setIsEditing={setIsEditing}
+          setSelectedCard={setSelectedCard}
+        />
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#00ff00" style={styles.load} />
+        ) : null}
       </ScrollView>
     </View>
   );
 };
 
-const Cards = ({ cards, setText }) =>
+const Cards = ({ cards, setIsEditing, setSelectedCard }) =>
   cards.map((card, key) => (
     <View key={key}>
-      <TouchableOpacity onPress={() => setText(card)}>
+      <TouchableOpacity
+        onPress={() => {
+          setSelectedCard(card);
+          setIsEditing(true);
+        }}
+      >
         <Text style={styles.card}>{card}</Text>
       </TouchableOpacity>
     </View>
@@ -77,7 +133,7 @@ const ModifyDeck = ({ cards, setCards, text, setText }) => {
   const handleSubmit = () => {
     setCards((prevCards) => [...prevCards, text]);
     cards.push(text);
-    setTotalDeckCard();
+    addCard(text);
     setText("");
   };
 
@@ -128,7 +184,7 @@ const styles = StyleSheet.create({
   },
   card: {
     color: "white",
-    padding: 10,
+    padding: 12.5,
     textAlign: "center",
     letterSpacing: 1.5,
   },
@@ -156,5 +212,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 1.5,
     fontSize: 12,
+  },
+  load: {
+    marginTop: 80,
   },
 });
