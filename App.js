@@ -20,7 +20,6 @@ export default function App() {
           <Stack.Screen
             name="Main"
             component={Main}
-            // initialParams={{ myDeckCards, setMyDeckCards }}
           />
           <Stack.Screen name="Extra" component={Extra} />
         </Stack.Navigator>
